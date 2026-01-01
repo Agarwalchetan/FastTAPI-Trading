@@ -1,1 +1,0 @@
-# FastAPI Trading Application

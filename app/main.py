@@ -42,12 +42,6 @@ async def get_all_data(
     limit: int = 1000, 
     db: Session = Depends(get_db)
 ):
-    """
-    Fetch all ticker data records from the database
-    
-    - **skip**: Number of records to skip (for pagination)
-    - **limit**: Maximum number of records to return
-    """
     try:
         ticker_data = crud.get_ticker_data(db, skip=skip, limit=limit)
         return ticker_data
@@ -62,16 +56,6 @@ async def create_data(
     ticker_data: schemas.TickerDataCreate, 
     db: Session = Depends(get_db)
 ):
-    """
-    Add a new ticker data record to the database
-    
-    - **datetime**: Timestamp for the data point
-    - **open**: Opening price
-    - **high**: Highest price
-    - **low**: Lowest price
-    - **close**: Closing price
-    - **volume**: Trading volume
-    """
     try:
         return crud.create_ticker_data(db=db, ticker_data=ticker_data)
     except Exception as e:
@@ -85,9 +69,6 @@ async def create_bulk_data(
     ticker_data_list: List[schemas.TickerDataCreate], 
     db: Session = Depends(get_db)
 ):
-    """
-    Add multiple ticker data records to the database
-    """
     try:
         return crud.create_multiple_ticker_data(db=db, ticker_data_list=ticker_data_list)
     except Exception as e:
@@ -98,7 +79,6 @@ async def create_bulk_data(
 
 @app.get("/data/count")
 async def get_data_count(db: Session = Depends(get_db)):
-    """Get total count of ticker data records"""
     try:
         count = crud.get_ticker_count(db)
         return {"count": count}
@@ -114,12 +94,6 @@ async def get_strategy_performance(
     long_window: int = 20,
     db: Session = Depends(get_db)
 ):
-    """
-    Calculate and return the performance of the Moving Average Crossover Strategy
-    
-    - **short_window**: Period for short-term moving average (default: 5)
-    - **long_window**: Period for long-term moving average (default: 20)
-    """
     try:
         # Get all ticker data
         ticker_data = crud.get_ticker_data(db, limit=10000)
@@ -154,7 +128,6 @@ async def get_strategy_performance(
 
 @app.delete("/data/all")
 async def delete_all_data(db: Session = Depends(get_db)):
-    """Delete all ticker data (useful for testing)"""
     try:
         count = crud.delete_all_ticker_data(db)
         return {"message": f"Deleted {count} records"}
