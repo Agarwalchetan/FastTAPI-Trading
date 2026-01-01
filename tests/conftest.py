@@ -12,7 +12,6 @@ TESTING_DATABASE_URL = os.getenv("TESTING_DATABASE_URL", "postgresql://trading_u
 
 @pytest.fixture(scope="session")
 def test_engine():
-    """Create test database engine"""
     engine = create_engine(TESTING_DATABASE_URL)
     Base.metadata.create_all(bind=engine)
     yield engine
@@ -20,7 +19,6 @@ def test_engine():
 
 @pytest.fixture(scope="function")
 def test_db(test_engine):
-    """Create test database session"""
     TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
     db = TestingSessionLocal()
     try:
@@ -31,7 +29,6 @@ def test_db(test_engine):
 
 @pytest.fixture(scope="function")
 def client(test_db):
-    """Create test client"""
     def override_get_db():
         try:
             yield test_db

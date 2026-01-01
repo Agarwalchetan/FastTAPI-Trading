@@ -4,20 +4,12 @@ from typing import List, Tuple
 from app.schemas import MovingAverageSignal, StrategyPerformance
 from app.models import TickerData
 
-class MovingAverageCrossoverStrategy:
-    """
-    Simple Moving Average Crossover Strategy
-    
-    Buy Signal: Short MA crosses above Long MA
-    Sell Signal: Short MA crosses below Long MA
-    """
-    
+class MovingAverageCrossoverStrategy:    
     def __init__(self, short_window: int = 5, long_window: int = 20):
         self.short_window = short_window
         self.long_window = long_window
     
     def calculate_moving_averages(self, prices: List[float]) -> Tuple[List[float], List[float]]:
-        """Calculate short and long moving averages"""
         df = pd.DataFrame({'price': prices})
         
         # Calculate moving averages
@@ -27,7 +19,6 @@ class MovingAverageCrossoverStrategy:
         return df['short_ma'].tolist(), df['long_ma'].tolist()
     
     def generate_signals(self, ticker_data: List[TickerData]) -> List[MovingAverageSignal]:
-        """Generate trading signals based on moving average crossover"""
         if len(ticker_data) < self.long_window:
             return []
         
@@ -65,7 +56,6 @@ class MovingAverageCrossoverStrategy:
         return signals
     
     def calculate_performance(self, signals: List[MovingAverageSignal]) -> StrategyPerformance:
-        """Calculate strategy performance metrics"""
         if not signals:
             return StrategyPerformance(
                 total_returns=0.0,

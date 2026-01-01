@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-"""
-Sample script to populate the database with test data
-"""
+
 
 import requests
 import json

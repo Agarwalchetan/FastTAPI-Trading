@@ -3,10 +3,8 @@ from datetime import datetime
 from fastapi.testclient import TestClient
 
 class TestAPIEndpoints:
-    """Test API endpoints functionality"""
     
     def test_root_endpoint(self, client: TestClient):
-        """Test root endpoint"""
         response = client.get("/")
         assert response.status_code == 200
         data = response.json()
@@ -14,7 +12,6 @@ class TestAPIEndpoints:
         assert "version" in data
     
     def test_health_check(self, client: TestClient):
-        """Test health check endpoint"""
         response = client.get("/health")
         assert response.status_code == 200
         data = response.json()
@@ -22,15 +19,13 @@ class TestAPIEndpoints:
         assert "timestamp" in data
     
     def test_get_data_empty_database(self, client: TestClient):
-        """Test getting data from empty database"""
         response = client.get("/data")
         assert response.status_code == 200
         assert response.json() == []
     
     def test_create_valid_ticker_data(self, client: TestClient):
-        """Test creating valid ticker data"""
         ticker_data = {
-            "datetime": "2023-01-01T09:30:00",
+            "datetime": "2026-01-01T09:30:00",
             "open": 100.0,
             "high": 105.0,
             "low": 99.0,
@@ -51,9 +46,8 @@ class TestAPIEndpoints:
         assert "created_at" in data
     
     def test_create_invalid_ticker_data(self, client: TestClient):
-        """Test creating invalid ticker data"""
         invalid_data = {
-            "datetime": "2023-01-01T09:30:00",
+            "datetime": "2026-01-01T09:30:00",
             "open": -100.0,  # Invalid negative price
             "high": 105.0,
             "low": 99.0,
@@ -65,10 +59,9 @@ class TestAPIEndpoints:
         assert response.status_code == 422  # Validation error
     
     def test_create_bulk_data(self, client: TestClient):
-        """Test creating multiple ticker data records"""
         bulk_data = [
             {
-                "datetime": "2023-01-01T09:30:00",
+                "datetime": "2026-01-01T09:30:00",
                 "open": 100.0,
                 "high": 105.0,
                 "low": 99.0,
@@ -76,7 +69,7 @@ class TestAPIEndpoints:
                 "volume": 1000000
             },
             {
-                "datetime": "2023-01-02T09:30:00",
+                "datetime": "2026-01-02T09:30:00",
                 "open": 103.0,
                 "high": 108.0,
                 "low": 102.0,
@@ -93,10 +86,9 @@ class TestAPIEndpoints:
         assert all("id" in item for item in data)
     
     def test_get_data_after_creation(self, client: TestClient):
-        """Test getting data after creating records"""
         # First create some data
         ticker_data = {
-            "datetime": "2023-01-01T09:30:00",
+            "datetime": "2026-01-01T09:30:00",
             "open": 100.0,
             "high": 105.0,
             "low": 99.0,
@@ -116,7 +108,6 @@ class TestAPIEndpoints:
         assert data[0]["open"] == 100.0
     
     def test_get_data_count(self, client: TestClient):
-        """Test getting data count"""
         response = client.get("/data/count")
         assert response.status_code == 200
         
@@ -125,12 +116,10 @@ class TestAPIEndpoints:
         assert isinstance(data["count"], int)
     
     def test_strategy_performance_no_data(self, client: TestClient):
-        """Test strategy performance with no data"""
         response = client.get("/strategy/performance")
         assert response.status_code == 404  # No data found
     
     def test_strategy_performance_with_data(self, client: TestClient):
-        """Test strategy performance with sufficient data"""
         # Create sufficient test data
         base_date = datetime(2023, 1, 1, 9, 30)
         bulk_data = []
@@ -172,7 +161,6 @@ class TestAPIEndpoints:
         assert isinstance(data["signals"], list)
     
     def test_strategy_performance_custom_parameters(self, client: TestClient):
-        """Test strategy performance with custom MA parameters"""
         # First create some data (reuse from previous test setup)
         base_date = datetime(2023, 1, 1, 9, 30)
         bulk_data = []
@@ -204,7 +192,7 @@ class TestAPIEndpoints:
         """Test deleting all data"""
         # First create some data
         ticker_data = {
-            "datetime": "2023-01-01T09:30:00",
+            "datetime": "2026-01-01T09:30:00",
             "open": 100.0,
             "high": 105.0,
             "low": 99.0,

@@ -4,10 +4,8 @@ from app.trading_strategy import MovingAverageCrossoverStrategy
 from app.models import TickerData
 
 class TestMovingAverageCalculations:
-    """Test moving average calculations and trading signals"""
     
     def setup_method(self):
-        """Setup test data"""
         self.strategy = MovingAverageCrossoverStrategy(short_window=3, long_window=5)
         
         # Create test ticker data
@@ -31,7 +29,6 @@ class TestMovingAverageCalculations:
             self.test_data.append(ticker)
     
     def test_moving_average_calculation(self):
-        """Test basic moving average calculation"""
         prices = [100, 101, 102, 103, 104]
         short_ma, long_ma = self.strategy.calculate_moving_averages(prices)
         
@@ -48,7 +45,6 @@ class TestMovingAverageCalculations:
         assert abs(short_ma[3] - expected_ma_4) < 0.001
     
     def test_moving_average_with_insufficient_data(self):
-        """Test moving average with insufficient data"""
         prices = [100, 101]  # Only 2 prices, need 3 for short MA
         short_ma, long_ma = self.strategy.calculate_moving_averages(prices)
         
@@ -57,7 +53,6 @@ class TestMovingAverageCalculations:
         assert all(str(x) == 'nan' for x in long_ma)
     
     def test_signal_generation_insufficient_data(self):
-        """Test signal generation with insufficient data"""
         # Use only first 3 data points (less than long_window=5)
         insufficient_data = self.test_data[:3]
         signals = self.strategy.generate_signals(insufficient_data)
@@ -66,7 +61,6 @@ class TestMovingAverageCalculations:
         assert signals == []
     
     def test_signal_generation_with_sufficient_data(self):
-        """Test signal generation with sufficient data"""
         signals = self.strategy.generate_signals(self.test_data)
         
         # Should have signals for all data points
@@ -82,7 +76,6 @@ class TestMovingAverageCalculations:
             assert signal.datetime == self.test_data[i].datetime
     
     def test_buy_signal_generation(self):
-        """Test buy signal generation when short MA crosses above long MA"""
         # Create data that will generate a buy signal
         base_date = datetime(2023, 1, 1, 9, 30)
         
@@ -110,7 +103,6 @@ class TestMovingAverageCalculations:
         assert len(buy_signals) > 0
     
     def test_sell_signal_generation(self):
-        """Test sell signal generation when short MA crosses below long MA"""
         # Create data that will generate a sell signal
         base_date = datetime(2023, 1, 1, 9, 30)
         
@@ -138,7 +130,6 @@ class TestMovingAverageCalculations:
         assert len(sell_signals) > 0
     
     def test_performance_calculation_no_signals(self):
-        """Test performance calculation with no trading signals"""
         empty_signals = []
         performance = self.strategy.calculate_performance(empty_signals)
         
@@ -149,7 +140,6 @@ class TestMovingAverageCalculations:
         assert performance.sharpe_ratio == 0.0
     
     def test_performance_calculation_with_signals(self):
-        """Test performance calculation with actual signals"""
         signals = self.strategy.generate_signals(self.test_data)
         performance = self.strategy.calculate_performance(signals)
         
@@ -167,7 +157,6 @@ class TestMovingAverageCalculations:
         assert performance.max_drawdown >= 0
     
     def test_moving_average_edge_cases(self):
-        """Test moving average calculation edge cases"""
         # Test with single price
         single_price = [100]
         short_ma, long_ma = self.strategy.calculate_moving_averages(single_price)
