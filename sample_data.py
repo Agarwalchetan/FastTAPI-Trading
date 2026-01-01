@@ -1,73 +1,75 @@
 #!/usr/bin/env python3
 
-
 import requests
-import json
-from datetime import datetime, timedelta
+import pandas as pd
+from pathlib import Path
+from datetime import datetime
 
-# API base URL
 BASE_URL = "http://localhost:8000"
 
-def create_sample_data():
-    """Create sample ticker data"""
+def load_data_from_excel():
+    """Read HINDALCO stock data from Excel file and prepare it for upload"""
+    data_file = Path(__file__).parent / "data" / "HINDALCO_1D.xlsx"
     
-    # Sample data based on typical stock price movements
-    base_date = datetime(2023, 1, 1, 9, 30)
-    sample_data = []
+    if not data_file.exists():
+        raise FileNotFoundError(f"Couldn't locate {data_file.name} - please check the path")
     
-    # Generate 50 days of sample data with realistic price movements
-    base_price = 100.0
+    df = pd.read_excel(data_file, engine='openpyxl')
     
-    for i in range(50):
-        # Simulate price movement with some randomness
-        price_change = (i % 5 - 2) * 0.5  # Simple oscillation
-        current_price = base_price + price_change + (i * 0.1)  # Slight upward trend
+    # Transform each row into our API's expected format
+    records = []
+    for _, row in df.iterrows():
+        # Excel files might use different column naming conventions
+        timestamp = row.get('datetime') or row.get('date') or row.get('Datetime') or row.get('Date')
         
-        # Create OHLCV data
-        open_price = current_price
-        high_price = current_price + abs(price_change) + 1
-        low_price = current_price - abs(price_change) - 0.5
-        close_price = current_price + (price_change * 0.5)
-        volume = 1000000 + (i * 50000)  # Increasing volume
+        if not timestamp or pd.isna(timestamp):
+            continue  # skip any rows with missing dates
         
-        ticker_data = {
-            "datetime": (base_date + timedelta(days=i)).isoformat(),
-            "open": round(open_price, 2),
-            "high": round(high_price, 2),
-            "low": round(low_price, 2),
-            "close": round(close_price, 2),
-            "volume": volume
+        # Normalize the timestamp format
+        if isinstance(timestamp, str):
+            timestamp = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+        else:
+            timestamp = pd.to_datetime(timestamp)
+        
+        # Build the record with proper type conversions
+        record = {
+            "datetime": timestamp.isoformat(),
+            "open": float(row.get('open', row.get('Open', 0))),
+            "high": float(row.get('high', row.get('High', 0))),
+            "low": float(row.get('low', row.get('Low', 0))),
+            "close": float(row.get('close', row.get('Close', 0))),
+            "volume": int(row.get('volume', row.get('Volume', 0)))
         }
-        sample_data.append(ticker_data)
+        records.append(record)
     
-    return sample_data
+    return records
 
 def populate_database():
-    """Populate database with sample data"""
+    """Load HINDALCO data from Excel and upload it to the database"""
     
-    print("Creating sample data...")
-    sample_data = create_sample_data()
+    print("Loading data from Excel file...")
+    data = load_data_from_excel()
     
-    print(f"Uploading {len(sample_data)} records to database...")
+    print(f"Found {len(data)} records. Uploading to database...")
     
     try:
         response = requests.post(
             f"{BASE_URL}/data/bulk",
-            json=sample_data,
+            json=data,
             headers={"Content-Type": "application/json"}
         )
         
         if response.status_code == 200:
-            print("✅ Sample data uploaded successfully!")
-            print(f"Created {len(sample_data)} ticker records")
+            print("Data uploaded successfully!")
+            print(f"Created {len(data)} ticker records")
         else:
-            print(f"❌ Error uploading data: {response.status_code}")
+            print(f"Error uploading data: {response.status_code}")
             print(response.text)
             
     except requests.exceptions.ConnectionError:
-        print("❌ Could not connect to API. Make sure the server is running on http://localhost:8000")
+        print("Could not connect to API")
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"Error: {e}")
 
 def test_strategy_performance():
     """Test the strategy performance endpoint"""
@@ -79,7 +81,7 @@ def test_strategy_performance():
         
         if response.status_code == 200:
             data = response.json()
-            print("✅ Strategy performance calculated successfully!")
+            print("Strategy performance calculated successfully!")
             print(f"Total Returns: {data['total_returns']:.2f}%")
             print(f"Total Trades: {data['total_trades']}")
             print(f"Win Rate: {data['win_rate']:.2f}%")
@@ -87,37 +89,33 @@ def test_strategy_performance():
             print(f"Sharpe Ratio: {data['sharpe_ratio']:.4f}")
             print(f"Signals Generated: {len(data['signals'])}")
         else:
-            print(f"❌ Error getting strategy performance: {response.status_code}")
+            print(f"Error getting strategy performance: {response.status_code}")
             print(response.text)
             
     except requests.exceptions.ConnectionError:
-        print("❌ Could not connect to API. Make sure the server is running on http://localhost:8000")
+        print("Could not connect to API")
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"Error: {e}")
 
 if __name__ == "__main__":
-    print("🚀 FastAPI Trading System - Sample Data Loader")
+    print("FastAPI Trading System - HINDALCO Data Loader")
     print("=" * 50)
     
-    # Check if API is running
+    # Quick health check before we start
     try:
         response = requests.get(f"{BASE_URL}/health")
         if response.status_code == 200:
-            print("✅ API is running")
+            print("API is up and running")
         else:
-            print("❌ API health check failed")
+            print("API responded but health check failed")
             exit(1)
     except:
-        print("❌ API is not running. Please start it first with: docker-compose up")
+        print("Couldn't reach the API")
         exit(1)
     
-    # Populate database
     populate_database()
-    
-    # Test strategy
     test_strategy_performance()
     
-    print("\n🎉 Done! You can now:")
-    print("- View API docs at: http://localhost:8000/docs")
-    print("- Get all data: http://localhost:8000/data")
-    print("- Get strategy performance: http://localhost:8000/strategy/performance")
+    print("- API docs: http://localhost:8000/docs")
+    print("- All data: http://localhost:8000/data")
+    print("- Strategy Performance: http://localhost:8000/strategy/performance")
